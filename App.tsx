@@ -11,7 +11,7 @@ import { calculateSquatWOD } from './services/squatLogic'; // V5 Import
 import { calculateRunningWOD } from './services/runningLogic'; // V5.2 Import
 import { calculateCaliWOD } from './services/calisthenicsLogic'; // V5.2 Import
 import { calculateToeflTask } from './services/toeflLogic'; // V5.2 Import
-import { AlertTriangle, LayoutDashboard, Map, CalendarDays, Zap, TrendingUp } from 'lucide-react';
+import { AlertTriangle, LayoutDashboard, Map, CalendarDays, Zap, TrendingUp, Radio } from 'lucide-react';
 import { DailyTask } from './types';
 
 interface ModalState {
@@ -134,7 +134,14 @@ function App() {
               <div className="w-2 h-8 bg-neon-green rounded-sm"></div>
               <div>
                 <h1 className="font-bold text-lg leading-none tracking-tight">ATHLETE<span className="text-neon-blue">OS</span></h1>
-                <span className="text-[10px] text-zinc-500 font-mono tracking-widest">HYBRID PROTOCOL v5.2</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-zinc-500 font-mono tracking-widest">v6.0</span>
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-green"></span>
+                    </span>
+                    <span className="text-[10px] text-neon-green font-mono font-bold">LIVE SYSTEM</span>
+                </div>
               </div>
             </div>
             
