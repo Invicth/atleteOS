@@ -1,6 +1,6 @@
 import React from 'react';
 import { DailyTask } from '../types';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, TrendingUp, Brain, Zap } from 'lucide-react';
 
 interface TaskModalProps {
   task: DailyTask | null;
@@ -19,7 +19,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, category })
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
       <div 
         className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-200"
-        onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside
+        onClick={(e) => e.stopPropagation()} 
       >
         {/* Header */}
         <div className={`sticky top-0 z-10 flex items-center justify-between p-5 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur`}>
@@ -36,6 +36,40 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, category })
             <X size={24} />
           </button>
         </div>
+
+        {/* V5.0/V5.2 DYNAMIC DATA DISPLAY */}
+        {/* Scenario A: Weight Load (Squat) */}
+        {task.dynamicLoad && (
+          <div className="mx-6 mt-6 p-6 rounded-xl bg-zinc-900 border border-neon-green/30 relative overflow-hidden group">
+             <div className="absolute top-0 right-0 p-2 opacity-10">
+                <TrendingUp size={100} />
+             </div>
+             <p className="text-xs font-mono text-neon-green uppercase tracking-widest mb-1">CALCULATED LOAD ON BAR</p>
+             <div className="flex items-baseline gap-2">
+                 <span className="text-5xl font-black text-white tracking-tighter">{task.dynamicLoad}</span>
+             </div>
+             <p className="text-sm text-zinc-400 mt-2 font-medium">{task.dynamicSetInfo}</p>
+          </div>
+        )}
+
+        {/* Scenario B: Methodology Focus (Languages/Running/Cali) */}
+        {task.methodology && !task.dynamicLoad && (
+           <div className={`mx-6 mt-6 p-6 rounded-xl bg-zinc-900 border ${category === 'Physical' ? 'border-neon-green/30' : 'border-neon-blue/30'} relative overflow-hidden`}>
+              <div className="absolute top-0 right-0 p-2 opacity-10">
+                 {category === 'Physical' ? <Zap size={100} /> : <Brain size={100} />}
+              </div>
+              <p className={`text-xs font-mono uppercase tracking-widest mb-1 ${category === 'Physical' ? 'text-neon-green' : 'text-neon-blue'}`}>
+                  ACTIVE METHODOLOGY
+              </p>
+              <h4 className="text-xl font-bold text-white mb-2">{task.methodology}</h4>
+              
+              {task.focusMetric && (
+                  <div className={`inline-block px-3 py-1 rounded text-sm font-bold ${category === 'Physical' ? 'bg-neon-green/20 text-neon-green' : 'bg-neon-blue/20 text-neon-blue'}`}>
+                      Target: {task.focusMetric}
+                  </div>
+              )}
+           </div>
+        )}
 
         {/* Body */}
         <div className="p-6 space-y-6">
@@ -64,7 +98,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, category })
               </div>
             ))
           ) : (
-             // Fallback if no extended content is present
             <div className="space-y-4">
                <p className="text-zinc-400 italic">Resumen general de la sesión:</p>
                <ul className="space-y-2">

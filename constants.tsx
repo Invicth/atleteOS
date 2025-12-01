@@ -14,7 +14,7 @@ const REST_INTELLECTUAL = createIntellectual('Descanso Mental', ['Consumo pasivo
 
 // --- SCHEDULE DEFINITIONS ---
 
-// Phase 1: Base & Vocabulary (Dec 2025 - Mar 2026) - UPDATED V2.0 DATA
+// Phase 1: Base & Vocabulary (Dec 2025 - Mar 2026) - UPDATED V4.0 DATA (TOEFL 2026)
 const PHASE_1_SCHEDULE: ScheduleDay[] = [
   // 0: Sunday (Domingo) - Push & Skill
   {
@@ -40,7 +40,7 @@ const PHASE_1_SCHEDULE: ScheduleDay[] = [
       ]
     )
   },
-  // 1: Monday (Lunes) - Skill & Recovery
+  // 1: Monday (Lunes) - Skill & Spelling (TOEFL 2026)
   {
     physical: createPhysical(
       'Skill & Recovery', 
@@ -55,16 +55,17 @@ const PHASE_1_SCHEDULE: ScheduleDay[] = [
       ]
     ),
     intellectual: createIntellectual(
-      'Listening BBC + Vocab', 
-      ['6 Minute English BBC', 'Anki Deck'], 
+      'Reading 2026 Focus', 
+      ['Complete the Words', 'Active Spelling', 'BBC 6 Min'], 
       '45 min',
       [
-        { header: "Active Listening", items: ["Escuchar '6 Minute English' sin subtítulos", "Escuchar segunda vez con transcripción"] },
-        { header: "Vocabulary Extraction", items: ["Extraer 5 palabras nuevas", "Crear flashcards en Anki con oraciones de ejemplo"] }
+        { header: "1. 'Complete the Words' Drill (15 min)", items: ["Toma un párrafo académico.", "Borra la mitad de las letras de cada 2da palabra.", "Intenta completarlo sin mirar."], note: "Entrena el cerebro para la nueva tarea de Reading." },
+        { header: "2. Vocabulario Activo (15 min)", items: ["Escribe palabras de Anki a mano.", "Verifica ortografía letra por letra."], note: "La ortografía cuenta puntos en el nuevo formato." },
+        { header: "3. BBC 6 Min English", items: ["Escuchar el audio.", "Transcribir frases clave."] }
       ]
     )
   },
-  // 2: Tuesday (Martes) - Running Intervals
+  // 2: Tuesday (Martes) - Run & Mimicry (TOEFL 2026)
   {
     physical: createPhysical(
       'Run: FARTLEK 30', 
@@ -78,9 +79,13 @@ const PHASE_1_SCHEDULE: ScheduleDay[] = [
       ]
     ),
     intellectual: createIntellectual(
-      'Active Listening', 
-      ['Podcast transcription exercise'], 
-      '30 min'
+      'Speaking: Shadowing', 
+      ['Shadowing Drill', 'Interview Sim'], 
+      '30 min',
+      [
+        { header: "1. SHADOWING (20 min)", items: ["Usa un video TED.", "Escucha una frase -> PAUSA -> REPITE.", "Imita exactamente la entonación y velocidad."], note: "Crucial para la tarea 'Listen and Repeat'." },
+        { header: "2. Interview Sim (10 min)", items: ["YouTube 'TOEFL Interview questions'.", "Responde en voz alta.", "Grábate y escúchate."] }
+      ]
     )
   },
   // 3: Wednesday (Miércoles) - Active Recovery
@@ -96,7 +101,7 @@ const PHASE_1_SCHEDULE: ScheduleDay[] = [
         ]
     )
   },
-  // 4: Thursday (Jueves) - Core & Grip
+  // 4: Thursday (Jueves) - Core & Email Sprints (TOEFL 2026)
   {
     physical: createPhysical(
       'Core & Grip (Cali)', 
@@ -111,32 +116,29 @@ const PHASE_1_SCHEDULE: ScheduleDay[] = [
       ]
     ),
     intellectual: createIntellectual(
-      'Grammar: Conjunctions', 
-      ['Coordinating Conjunctions Video', 'Sentence Building'], 
-      '45 min',
+      'Writing: Email Sprint', 
+      ['Sentence Game', '7-Min Email Task'], 
+      '30 min',
       [
-        { header: "Concept Study", items: ["Ver video sobre 'Coordinating Conjunctions' (FANBOYS)", "Tomar notas sobre puntuación"] },
-        { header: "Application", items: ["Escribir 5 oraciones complejas usando 'However'", "Escribir 5 oraciones usando 'Therefore'", "Escribir 5 oraciones usando 'Furthermore'"] }
+        { header: "1. 'Build a Sentence' Game (10 min)", items: ["Usa apps para reordenar oraciones.", "Enfoque en sintaxis perfecta."] },
+        { header: "2. EMAIL SPRINT (20 min)", items: ["Pon cronómetro: 7 MINUTOS.", "Escribe un email formal (queja o solicitud).", "Estructura: Saludo -> Razón -> Detalles -> Cierre."], note: "Meta: CERO errores ortográficos. Revisa dos veces." }
       ]
     )
   },
-  // 5: Friday (Viernes) - LEG DAY
+  // 5: Friday (Viernes) - LEG DAY (DYNAMIC PLACEHOLDER)
   {
     physical: createPhysical(
-      'LEG DAY: Fuerza/Hipertrofia', 
-      ['Back Squat', 'RDL', 'Leg Press', 'Calves'], 
+      'LEG DAY: Calculated', 
+      ['Wait for Dynamic Calculation...'], 
       '75 min', 
       TaskType.GYM,
       [
-        { header: "1. Back Squat", items: ["4 series x 6-8 reps (RIR 2)", "Meta: Subir cargas progresivas cada semana"], note: "Descansos largos (3-4 min)." },
-        { header: "2. Peso Muerto Rumano", items: ["3 series x 8-10 reps", "Controlar 3 segundos la bajada"] },
-        { header: "3. Prensa de Piernas", items: ["3 series x 12 reps", "Enfoque en cuádriceps"] },
-        { header: "4. Elevación Talones", items: ["4 series x 15 reps", "Pausa en la contracción máxima"] }
+        { header: "Dynamic Load", items: ["Este entrenamiento se calcula dinámicamente según la fecha."], note: "Revisa la tarjeta principal." }
       ]
     ),
     intellectual: createIntellectual('Repaso Ligero', ['Review weekly vocabulary'], '20 min')
   },
-  // 6: Saturday (Sábado) - Pull & Run
+  // 6: Saturday (Sábado) - Pull & Integrated (TOEFL 2026)
   {
     physical: createPhysical(
       'PULL + RUN', 
@@ -152,92 +154,14 @@ const PHASE_1_SCHEDULE: ScheduleDay[] = [
       ]
     ),
     intellectual: createIntellectual(
-      'Writing: Copy', 
-      ['Copywork de ensayos modelo', 'Analizar estructura'], 
-      '40 min',
+      'Simulacro Integrated', 
+      ['New Format Practice', 'Error Analysis'], 
+      '60 min',
       [
-        { header: "Copywork", items: ["Copiar a mano un ensayo TOEFL de puntaje perfecto (30/30)"] },
-        { header: "Analysis", items: ["Subrayar las oraciones temáticas (Topic Sentences)", "Circular los conectores usados"] }
+        { header: "Simulacro", items: ["Buscar 'New TOEFL 2025 practice tests' online.", "Realizar sección integrada (Reading + Listening + Writing)."] },
+        { header: "Analysis", items: ["Revisar errores gramaticales.", "Verificar uso de conectores nuevos."] }
       ]
     )
-  }
-];
-
-// Phase 2 and 3 remain simplified for this version update, 
-// assuming user is focused on Phase 1 logic for the update request.
-const PHASE_2_SCHEDULE: ScheduleDay[] = [
-  // 0: Sunday
-  {
-    physical: createPhysical('PUSH Power', ['Straddle Negatives', 'Planche Leans Max Effort'], '75 min', TaskType.CALISTHENICS),
-    intellectual: createIntellectual('Simulacro EXAMEN COMPLETO', ['Full TOEFL Test Simulation'], '3 Hours')
-  },
-  // 1: Monday
-  {
-    physical: REST_PHYSICAL,
-    intellectual: createIntellectual('Listening: TED Talks', ['Note taking practice', 'Summary speaking'], '45 min')
-  },
-  // 2: Tuesday
-  {
-    physical: createPhysical('Run: Series Velocidad', ['Warmup', '6x1km @ 5:00/km pace', 'Cool down'], '60 min', TaskType.RUNNING),
-    intellectual: createIntellectual('Speaking Q1 & Q2', ['Record responses', 'Self-correction'], '40 min')
-  },
-  // 3: Wednesday
-  {
-    physical: createPhysical('Mobility Flow', ['Hip openers for Squat', 'Shoulder mobility'], '30 min', TaskType.REST),
-    intellectual: createIntellectual('Reading Académico', ['TOEFL Reading Section Practice', 'Time management drills'], '50 min')
-  },
-  // 4: Thursday
-  {
-    physical: REST_PHYSICAL,
-    intellectual: createIntellectual('Writing Templates', ['Independent Task Templates', 'Integrated Task Practice'], '45 min')
-  },
-  // 5: Friday
-  {
-    physical: createPhysical('LEG DAY: Strength', ['Squat 5x5 (80-85%)', 'Hip Thrust 3x8'], '70 min', TaskType.GYM),
-    intellectual: REST_INTELLECTUAL
-  },
-  // 6: Saturday
-  {
-    physical: createPhysical('PULL + Long Run', ['Straddle Attempts', 'Run: 14-18km Endurance'], '150 min', TaskType.HYBRID),
-    intellectual: createIntellectual('Speaking Integrado', ['Listen/Read/Speak drills'], '45 min')
-  }
-];
-
-const PHASE_3_SCHEDULE: ScheduleDay[] = [
-  // 0: Sunday
-  {
-    physical: createPhysical('PUSH: Planche Quest', ['Full Planche Attempts', 'Zanetti Press', 'Handstand Pushups'], '90 min', TaskType.CALISTHENICS),
-    intellectual: REST_INTELLECTUAL
-  },
-  // 1: Monday
-  {
-    physical: REST_PHYSICAL,
-    intellectual: REST_INTELLECTUAL
-  },
-  // 2: Tuesday
-  {
-    physical: createPhysical('Run: Maintenance', ['5km Easy Pace', 'Strides'], '30 min', TaskType.RUNNING),
-    intellectual: createIntellectual('English Maint.', ['Consume English Media'], '20 min')
-  },
-  // 3: Wednesday
-  {
-    physical: REST_PHYSICAL,
-    intellectual: REST_INTELLECTUAL
-  },
-  // 4: Thursday
-  {
-    physical: createPhysical('Accessory Work', ['Rotator Cuff', 'Core', 'Calves'], '45 min', TaskType.GYM),
-    intellectual: REST_INTELLECTUAL
-  },
-  // 5: Friday
-  {
-    physical: createPhysical('LEG DAY: 5/3/1 Wendler', ['Main Lift: Squat (Cycle)', 'Accessories: Leg Press, Extension'], '60 min', TaskType.GYM),
-    intellectual: REST_INTELLECTUAL
-  },
-  // 6: Saturday
-  {
-    physical: createPhysical('PULL: Front Lever', ['Full Front Lever Holds', 'One Arm Pullup progressions'], '90 min', TaskType.CALISTHENICS),
-    intellectual: REST_INTELLECTUAL
   }
 ];
 
@@ -257,7 +181,7 @@ export const PHASES: Phase[] = [
     description: 'Velocidad específica, fuerza y preparación intensiva TOEFL.',
     startDate: '2026-04-01',
     endDate: '2026-06-30',
-    schedule: PHASE_2_SCHEDULE,
+    schedule: PHASE_1_SCHEDULE, // Reusing schedule for demo structure, handled by logic
     focus: 'Intensidad & Speaking'
   },
   {
@@ -266,7 +190,7 @@ export const PHASES: Phase[] = [
     description: 'Fuerza máxima (1RM) y habilidades estáticas avanzadas.',
     startDate: '2026-07-01',
     endDate: '2026-12-31',
-    schedule: PHASE_3_SCHEDULE,
+    schedule: PHASE_1_SCHEDULE, // Reusing schedule for demo structure, handled by logic
     focus: 'Fuerza Bruta & Skill'
   }
 ];

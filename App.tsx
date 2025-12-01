@@ -5,8 +5,13 @@ import { Timeline } from './components/Timeline';
 import { GoalProgress } from './components/GoalProgress';
 import { TaskModal } from './components/TaskModal';
 import { YearlyRoadmap } from './components/YearlyRoadmap';
+import { SquatPath } from './components/SquatPath'; // V5 Import
 import { getPhaseByDate, getDailySchedule, formatDate, getDynamicGoals } from './services/dateService';
-import { AlertTriangle, LayoutDashboard, Map, CalendarDays } from 'lucide-react';
+import { calculateSquatWOD } from './services/squatLogic'; // V5 Import
+import { calculateRunningWOD } from './services/runningLogic'; // V5.2 Import
+import { calculateCaliWOD } from './services/calisthenicsLogic'; // V5.2 Import
+import { calculateToeflTask } from './services/toeflLogic'; // V5.2 Import
+import { AlertTriangle, LayoutDashboard, Map, CalendarDays, Zap, TrendingUp } from 'lucide-react';
 import { DailyTask } from './types';
 
 interface ModalState {
@@ -15,7 +20,7 @@ interface ModalState {
   category: 'Physical' | 'Intellectual';
 }
 
-type Tab = 'ops' | 'roadmap';
+type Tab = 'ops' | 'roadmap' | 'squat';
 
 function App() {
   // Start simulation at Dec 1, 2025 for the demo
@@ -25,12 +30,89 @@ function App() {
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, task: null, category: 'Physical' });
   
   const phase = getPhaseByDate(currentDate);
-  const dailySchedule = getDailySchedule(currentDate, phase);
+  let dailySchedule = getDailySchedule(currentDate, phase);
   
-  // Calculate dynamic goals based on simulated date
-  const dynamicGoals = getDynamicGoals(currentDate);
+  // --- V5.2 DYNAMIC ENGINE INJECTION ---
+  if (dailySchedule) {
+      const dayOfWeek = currentDate.getDay();
 
-  // Extract specific goals for the big cards
+      // MONDAY (Day 1): Cali Skill + TOEFL Input
+      if (dayOfWeek === 1) {
+          const toeflDynamic = calculateToeflTask(currentDate, 'INPUT');
+          dailySchedule = {
+              ...dailySchedule,
+              intellectual: { ...dailySchedule.intellectual, ...toeflDynamic }
+          };
+      }
+
+      // TUESDAY (Day 2): Running Intervals + TOEFL Speaking
+      if (dayOfWeek === 2) {
+          const runDynamic = calculateRunningWOD(currentDate, 'INTERVALS');
+          const toeflDynamic = calculateToeflTask(currentDate, 'SPEAKING');
+          dailySchedule = {
+              ...dailySchedule,
+              physical: { ...dailySchedule.physical, ...runDynamic },
+              intellectual: { ...dailySchedule.intellectual, ...toeflDynamic }
+          };
+      }
+
+      // THURSDAY (Day 4): Cali/Core + TOEFL Writing
+      if (dayOfWeek === 4) {
+          const toeflDynamic = calculateToeflTask(currentDate, 'WRITING');
+          // Optional: Add Cali dynamic logic for Thursday if needed, for now focusing on TOEFL
+          dailySchedule = {
+              ...dailySchedule,
+              intellectual: { ...dailySchedule.intellectual, ...toeflDynamic }
+          };
+      }
+
+      // FRIDAY (Day 5): Squat Engine
+      if (dayOfWeek === 5) {
+        const dynamicSquat = calculateSquatWOD(currentDate);
+        dailySchedule = {
+            ...dailySchedule,
+            physical: { ...dailySchedule.physical, ...dynamicSquat }
+        };
+      }
+
+      // SATURDAY (Day 6): Cali Pull + Running Long + TOEFL Integrated
+      if (dayOfWeek === 6) {
+          const caliDynamic = calculateCaliWOD(currentDate, 'FRONT_LEVER');
+          const runDynamic = calculateRunningWOD(currentDate, 'LONG_RUN');
+          const toeflDynamic = calculateToeflTask(currentDate, 'INTEGRATED');
+          
+          // Merge physical: Cali first, then append Running info
+          const mergedPhysical = { 
+              ...dailySchedule.physical, 
+              ...caliDynamic,
+              // We append running info to the title to show it's a double day
+              title: `${caliDynamic.title} + ${runDynamic.title?.split(':')[1] || 'Run'}`,
+              // We prioritize Cali methodology display but add run details
+              extendedContent: [
+                  ...(caliDynamic.extendedContent || []),
+                  { header: "--- SECOND SESSION: RUNNING ---", items: runDynamic.extendedContent?.[1].items || [] }
+              ]
+          };
+
+          dailySchedule = {
+              ...dailySchedule,
+              physical: mergedPhysical,
+              intellectual: { ...dailySchedule.intellectual, ...toeflDynamic }
+          };
+      }
+      
+      // SUNDAY (Day 0): Cali Push (Planche)
+      if (dayOfWeek === 0) {
+          const caliDynamic = calculateCaliWOD(currentDate, 'PLANCHE');
+          dailySchedule = {
+              ...dailySchedule,
+              physical: { ...dailySchedule.physical, ...caliDynamic }
+          }
+      }
+  }
+  // -----------------------------------
+
+  const dynamicGoals = getDynamicGoals(currentDate);
   const squatGoal = dynamicGoals.find(g => g.id === '3');
   const toeflGoal = dynamicGoals.find(g => g.id === '5');
 
@@ -47,27 +129,35 @@ function App() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800">
         <div className="max-w-5xl mx-auto px-4 pt-4 pb-0">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-8 bg-neon-green rounded-sm"></div>
               <div>
                 <h1 className="font-bold text-lg leading-none tracking-tight">ATHLETE<span className="text-neon-blue">OS</span></h1>
-                <span className="text-[10px] text-zinc-500 font-mono tracking-widest">HYBRID PROTOCOL v3.0</span>
+                <span className="text-[10px] text-zinc-500 font-mono tracking-widest">HYBRID PROTOCOL v5.2</span>
               </div>
             </div>
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium capitalize text-white">{formatDate(currentDate)}</p>
-              <p className="text-xs text-zinc-500 font-mono">
-                {phase ? phase.name : 'OFF SEASON'}
-              </p>
+            
+            <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-neon-blue/10 border border-neon-blue/30 rounded text-[10px] font-mono font-bold text-neon-blue">
+                    <Zap size={12} />
+                    TARGET: NEW TOEFL FORMAT (2026)
+                </div>
+
+                <div className="text-right hidden sm:block">
+                    <p className="text-sm font-medium capitalize text-white">{formatDate(currentDate)}</p>
+                    <p className="text-xs text-zinc-500 font-mono">
+                        {phase ? phase.name : 'OFF SEASON'}
+                    </p>
+                </div>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex gap-6 text-sm font-medium">
+          <div className="flex gap-6 text-sm font-medium overflow-x-auto hide-scrollbar">
             <button 
               onClick={() => setActiveTab('ops')}
-              className={`pb-3 flex items-center gap-2 transition-colors relative ${
+              className={`pb-3 flex items-center gap-2 transition-colors relative whitespace-nowrap ${
                 activeTab === 'ops' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
@@ -79,7 +169,7 @@ function App() {
             </button>
             <button 
               onClick={() => setActiveTab('roadmap')}
-              className={`pb-3 flex items-center gap-2 transition-colors relative ${
+              className={`pb-3 flex items-center gap-2 transition-colors relative whitespace-nowrap ${
                 activeTab === 'roadmap' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
@@ -87,6 +177,19 @@ function App() {
               YEARLY ROADMAP
               {activeTab === 'roadmap' && (
                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-neon-blue shadow-[0_0_10px_#22d3ee]"></span>
+              )}
+            </button>
+            {/* NEW V5 TAB */}
+            <button 
+              onClick={() => setActiveTab('squat')}
+              className={`pb-3 flex items-center gap-2 transition-colors relative whitespace-nowrap ${
+                activeTab === 'squat' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <TrendingUp size={16} />
+              SQUAT PROGRESSION
+              {activeTab === 'squat' && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-neon-green shadow-[0_0_10px_#bef264]"></span>
               )}
             </button>
           </div>
@@ -98,7 +201,6 @@ function App() {
         {/* TAB 1: OPS CENTER */}
         {activeTab === 'ops' && (
           <div className="space-y-10 animate-in slide-in-from-bottom-2 duration-300">
-             {/* Timeline Section */}
             <section>
               <h2 className="text-xs font-mono text-zinc-500 mb-4 uppercase tracking-wider flex items-center gap-2">
                 <CalendarDays size={14} />
@@ -107,7 +209,6 @@ function App() {
               <Timeline currentPhase={phase} currentDate={currentDate} />
             </section>
 
-            {/* Today's Dashboard */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -145,7 +246,6 @@ function App() {
               )}
             </section>
 
-            {/* Goals Section */}
             <section className="grid md:grid-cols-3 gap-8">
               <div className="md:col-span-2 p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800">
                 <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
@@ -159,7 +259,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Stats / Quote Area */}
               <div className="flex flex-col gap-4">
                 {squatGoal && (
                     <div className="flex-1 p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 flex flex-col justify-center items-center text-center relative overflow-hidden group">
@@ -194,6 +293,13 @@ function App() {
         {activeTab === 'roadmap' && (
           <div className="animate-in slide-in-from-bottom-2 duration-300">
             <YearlyRoadmap />
+          </div>
+        )}
+
+        {/* TAB 3: SQUAT PATH (V5) */}
+        {activeTab === 'squat' && (
+          <div className="animate-in slide-in-from-bottom-2 duration-300">
+            <SquatPath />
           </div>
         )}
 

@@ -21,6 +21,14 @@ export interface DailyTask {
   details: string[]; // Summary for the card
   duration?: string;
   extendedContent?: DetailedStep[]; // Deep details for the modal
+  
+  // V5.0 New Fields for Dynamic Engine
+  dynamicLoad?: string; // e.g. "82.5 KG"
+  dynamicSetInfo?: string; // e.g. "4 sets x 8 reps"
+
+  // V5.2 New Fields for Polyglot/Running/Cali Engines
+  methodology?: string; // e.g. "Bidirectional Translation" or "Polarized 80/20"
+  focusMetric?: string; // e.g. "Pace: 4:30/km" or "TUT: 12s"
 }
 
 export interface ScheduleDay {
