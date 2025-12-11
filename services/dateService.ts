@@ -1,8 +1,17 @@
 import { PHASES, GOALS } from '../constants';
 import { Phase, ScheduleDay, Goal } from '../types';
 
+// HELPER: Get YYYY-MM-DD based on LOCAL system time, not UTC.
+// Fixes bug where 9PM in Colombia (GMT-5) shows as tomorrow (UTC).
+export const toLocalISOString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const getPhaseByDate = (date: Date): Phase | null => {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = toLocalISOString(date);
   
   return PHASES.find(phase => 
     dateStr >= phase.startDate && dateStr <= phase.endDate
@@ -19,12 +28,21 @@ export const getDailySchedule = (date: Date, phase: Phase | null): ScheduleDay |
 };
 
 export const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(date);
+  // MANUAL FORMATTING: Guarantees that the displayed text matches the local system index 100%.
+  // Removed Intl.DateTimeFormat to avoid any implicit browser timezone conversions.
+  
+  const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const MONTHS = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  const dayName = DAYS[date.getDay()];
+  const dayNum = date.getDate();
+  const monthName = MONTHS[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${dayName}, ${dayNum} de ${monthName} de ${year}`;
 };
 
 export const getRelativeTime = (deadline: string): string => {

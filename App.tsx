@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DevControls } from './components/DevControls';
 import { TaskCard } from './components/TaskCard';
 import { Timeline } from './components/Timeline';
@@ -11,7 +11,7 @@ import { calculateSquatWOD } from './services/squatLogic'; // V5 Import
 import { calculateRunningWOD } from './services/runningLogic'; // V5.2 Import
 import { calculateCaliWOD } from './services/calisthenicsLogic'; // V5.2 Import
 import { calculateToeflTask } from './services/toeflLogic'; // V5.2 Import
-import { AlertTriangle, LayoutDashboard, Map, CalendarDays, Zap, TrendingUp, Radio } from 'lucide-react';
+import { AlertTriangle, Zap, CalendarDays, Activity, TrendingUp, Map } from 'lucide-react';
 import { DailyTask } from './types';
 
 interface ModalState {
@@ -20,19 +20,75 @@ interface ModalState {
   category: 'Physical' | 'Intellectual';
 }
 
-type Tab = 'ops' | 'roadmap' | 'squat';
-
 function App() {
-  // Start simulation at Dec 1, 2025 for the demo
+  // CONFIG:
+  // Default State: Live Mode (System Date)
+  // Simulation Start: Dec 1, 2025 (If user activates simulation)
   const PROJECT_START = new Date('2025-12-01T09:00:00');
-  const [currentDate, setCurrentDate] = useState<Date>(PROJECT_START);
-  const [activeTab, setActiveTab] = useState<Tab>('ops');
+  
+  const [isSimMode, setIsSimMode] = useState<boolean>(false);
+  
+  // FIX: Robust Date Initialization for UTC Environments
+  // If the app runs in a Cloud IDE (UTC) but the user is in LatAm (GMT-5),
+  // 9PM Local = 2AM Next Day UTC. The app sees "Next Day".
+  // HEURISTIC: If offset is 0 (UTC) and hour is < 5 AM, assume it's late night in Americas and shift back.
+  const [currentDate, setCurrentDate] = useState<Date>(() => {
+    const now = new Date();
+    const utcHour = now.getUTCHours();
+    const offset = now.getTimezoneOffset(); // 0 for UTC, 300 for GMT-5
+
+    // If we are strictly in UTC (Offset 0) and it's early morning (00:00 - 05:00),
+    // it's likely late night in the US/Colombia. Shift back 1 day.
+    if (offset === 0 && utcHour < 5) {
+        now.setDate(now.getDate() - 1);
+    }
+    
+    // Normalize to Noon to prevent any further rollover
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+  });
+
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, task: null, category: 'Physical' });
   
+  // Force Date to NOW if Simulation Mode is OFF
+  useEffect(() => {
+    if (!isSimMode) {
+        const now = new Date();
+        const utcHour = now.getUTCHours();
+        const offset = now.getTimezoneOffset();
+
+        // Apply same heuristic for live updates
+        if (offset === 0 && utcHour < 5) {
+             now.setDate(now.getDate() - 1);
+        }
+
+        const safeLiveDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+        setCurrentDate(safeLiveDate);
+    }
+  }, [isSimMode]);
+
+  const toggleSimMode = () => {
+      if (isSimMode) {
+          // Turning OFF: Go back to today (with fix)
+          setIsSimMode(false);
+          // Re-trigger the useEffect logic by setting state implies re-render, 
+          // but let's be explicit to avoid flicker
+          const now = new Date();
+          const utcHour = now.getUTCHours();
+          const offset = now.getTimezoneOffset();
+          if (offset === 0 && utcHour < 5) now.setDate(now.getDate() - 1);
+          
+          setCurrentDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0));
+      } else {
+          // Turning ON: Jump to project start
+          setIsSimMode(true);
+          setCurrentDate(PROJECT_START);
+      }
+  };
+
   const phase = getPhaseByDate(currentDate);
   let dailySchedule = getDailySchedule(currentDate, phase);
   
-  // --- V5.2 DYNAMIC ENGINE INJECTION ---
+  // --- V5.2 DYNAMIC ENGINE INJECTION (THE BRAIN) ---
   if (dailySchedule) {
       const dayOfWeek = currentDate.getDay();
 
@@ -125,190 +181,153 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans pb-20">
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans pb-20 selection:bg-neon-green/30">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800">
-        <div className="max-w-5xl mx-auto px-4 pt-4 pb-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-8 bg-neon-green rounded-sm"></div>
+      <header className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors duration-500 ${isSimMode ? 'bg-amber-950/30 border-amber-900/50' : 'bg-[#09090b]/90 border-zinc-800'}`}>
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-1.5 h-8 rounded-full ${isSimMode ? 'bg-amber-500' : 'bg-neon-green shadow-[0_0_15px_rgba(190,242,100,0.5)]'}`}></div>
               <div>
-                <h1 className="font-bold text-lg leading-none tracking-tight">ATHLETE<span className="text-neon-blue">OS</span></h1>
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-zinc-500 font-mono tracking-widest">v6.0</span>
-                    <span className="flex h-2 w-2 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-green"></span>
+                <h1 className="font-bold text-xl leading-none tracking-tight">ATHLETE<span className="text-neon-blue">OS</span></h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-zinc-500 font-mono tracking-widest font-bold">v1.0.2</span>
+                    <span className="flex h-1.5 w-1.5 relative">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isSimMode ? 'bg-amber-500' : 'bg-neon-green'}`}></span>
+                      <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${isSimMode ? 'bg-amber-500' : 'bg-neon-green'}`}></span>
                     </span>
-                    <span className="text-[10px] text-neon-green font-mono font-bold">LIVE SYSTEM</span>
+                    <span className={`text-[10px] font-mono font-bold ${isSimMode ? 'text-amber-500' : 'text-neon-green'}`}>
+                        {isSimMode ? 'SIMULATION ACTIVE' : 'SYSTEM ONLINE'}
+                    </span>
                 </div>
               </div>
             </div>
             
             <div className="flex items-center gap-4">
-                <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-neon-blue/10 border border-neon-blue/30 rounded text-[10px] font-mono font-bold text-neon-blue">
+                <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-neon-blue/10 border border-neon-blue/20 rounded text-[10px] font-mono font-bold text-neon-blue">
                     <Zap size={12} />
-                    TARGET: NEW TOEFL FORMAT (2026)
+                    TARGET: TOEFL 2026
                 </div>
 
-                <div className="text-right hidden sm:block">
-                    <p className="text-sm font-medium capitalize text-white">{formatDate(currentDate)}</p>
-                    <p className="text-xs text-zinc-500 font-mono">
-                        {phase ? phase.name : 'OFF SEASON'}
+                <div className="text-right">
+                    <p className="text-sm font-bold capitalize text-white">{formatDate(currentDate)}</p>
+                    <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">
+                        {phase ? phase.name.split(':')[1] : 'OFF SEASON'}
                     </p>
                 </div>
             </div>
           </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex gap-6 text-sm font-medium overflow-x-auto hide-scrollbar">
-            <button 
-              onClick={() => setActiveTab('ops')}
-              className={`pb-3 flex items-center gap-2 transition-colors relative whitespace-nowrap ${
-                activeTab === 'ops' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              <LayoutDashboard size={16} />
-              OPS CENTER
-              {activeTab === 'ops' && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-neon-green shadow-[0_0_10px_#bef264]"></span>
-              )}
-            </button>
-            <button 
-              onClick={() => setActiveTab('roadmap')}
-              className={`pb-3 flex items-center gap-2 transition-colors relative whitespace-nowrap ${
-                activeTab === 'roadmap' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              <Map size={16} />
-              YEARLY ROADMAP
-              {activeTab === 'roadmap' && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-neon-blue shadow-[0_0_10px_#22d3ee]"></span>
-              )}
-            </button>
-            {/* NEW V5 TAB */}
-            <button 
-              onClick={() => setActiveTab('squat')}
-              className={`pb-3 flex items-center gap-2 transition-colors relative whitespace-nowrap ${
-                activeTab === 'squat' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              <TrendingUp size={16} />
-              SQUAT PROGRESSION
-              {activeTab === 'squat' && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-neon-green shadow-[0_0_10px_#bef264]"></span>
-              )}
-            </button>
-          </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-4xl mx-auto px-4 py-8 space-y-12">
         
-        {/* TAB 1: OPS CENTER */}
-        {activeTab === 'ops' && (
-          <div className="space-y-10 animate-in slide-in-from-bottom-2 duration-300">
-            <section>
-              <h2 className="text-xs font-mono text-zinc-500 mb-4 uppercase tracking-wider flex items-center gap-2">
-                <CalendarDays size={14} />
-                Macrocycle Phase
-              </h2>
-              <Timeline currentPhase={phase} currentDate={currentDate} />
-            </section>
+        {/* SECTION 1: TIMELINE */}
+        <section className="animate-in fade-in duration-500">
+          <div className="flex items-center gap-2 mb-4 px-2">
+            <CalendarDays size={16} className="text-zinc-500" />
+            <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Macrocycle Phase</h2>
+          </div>
+          <Timeline currentPhase={phase} currentDate={currentDate} />
+        </section>
 
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <span className="text-neon-green">///</span> 
-                  MISSION STATUS: <span className="text-zinc-300">{formatDate(currentDate).split(',')[0].toUpperCase()}</span>
-                </h2>
-                {phase && (
-                    <span className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-400 hidden sm:inline-block">
-                        Focus: <span className="text-white">{phase.focus}</span>
-                    </span>
-                )}
+        {/* SECTION 2: MISSION STATUS (TODAY) */}
+        <section className="animate-in slide-in-from-bottom-4 duration-500 delay-100">
+          <div className="flex items-center justify-between mb-6 px-2">
+            <h2 className="text-3xl font-black text-white flex items-center gap-3">
+              <span className="text-neon-green text-4xl">///</span> 
+              <span>MISSION: <span className="text-zinc-500">{formatDate(currentDate).split(',')[0].toUpperCase()}</span></span>
+            </h2>
+          </div>
+
+          {dailySchedule ? (
+            <div className="grid md:grid-cols-2 gap-6">
+              <TaskCard 
+                task={dailySchedule.physical} 
+                category="Physical" 
+                onClick={() => openModal(dailySchedule.physical, 'Physical')}
+              />
+              <TaskCard 
+                task={dailySchedule.intellectual} 
+                category="Intellectual" 
+                onClick={() => openModal(dailySchedule.intellectual, 'Intellectual')}
+              />
+            </div>
+          ) : (
+            <div className="p-10 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 flex flex-col items-center justify-center text-center">
+              <AlertTriangle className="text-amber-500 mb-4" size={32} />
+              <h3 className="text-xl font-bold text-white">Fuera de Temporada</h3>
+              <p className="text-zinc-500 max-w-md mt-2">
+                La fecha actual ({formatDate(currentDate)}) está fuera del plan operativo.
+                Activa el <strong>SIMULATION MODE</strong> para visualizar entrenamientos futuros.
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* SECTION 3: OBJECTIVES & STATS */}
+        <section className="animate-in slide-in-from-bottom-4 duration-500 delay-200">
+          <div className="flex items-center gap-2 mb-6 px-2">
+            <Activity size={16} className="text-zinc-500" />
+            <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Performance Metrics</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Goals List */}
+            <div className="md:col-span-2 p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 backdrop-blur-sm">
+              <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-neon-blue rounded-full"></span>
+                Active Goals
+              </h3>
+              <div className="space-y-1">
+                {dynamicGoals.map(goal => (
+                  <GoalProgress key={goal.id} goal={goal} />
+                ))}
               </div>
+            </div>
 
-              {dailySchedule ? (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <TaskCard 
-                    task={dailySchedule.physical} 
-                    category="Physical" 
-                    onClick={() => openModal(dailySchedule.physical, 'Physical')}
-                  />
-                  <TaskCard 
-                    task={dailySchedule.intellectual} 
-                    category="Intellectual" 
-                    onClick={() => openModal(dailySchedule.intellectual, 'Intellectual')}
-                  />
-                </div>
-              ) : (
-                <div className="p-8 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/30 flex flex-col items-center justify-center text-center">
-                  <AlertTriangle className="text-amber-500 mb-4" size={32} />
-                  <h3 className="text-lg font-bold">Fuera de Temporada</h3>
-                  <p className="text-zinc-500 max-w-md mt-2">
-                    La fecha actual está fuera del plan programado (Dic 2025 - Dic 2026). Usa el control de desarrollador para simular una fecha válida.
-                  </p>
-                </div>
+            {/* Big Stat Cards */}
+            <div className="flex flex-col gap-4">
+              {squatGoal && (
+                  <div className="flex-1 p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:border-neon-green/50 transition-colors">
+                      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_50%,transparent_75%,transparent_100%)] bg-[length:250%_250%,100%_100%] bg-[position:0_0,0_0] group-hover:bg-[position:100%_100%,0_0] transition-all duration-700"></div>
+                      <h4 className="text-5xl font-black text-white mb-1 italic tracking-tighter">
+                          {squatGoal.currentStatus.replace('kg', '')}
+                          <span className="text-lg font-normal text-zinc-600 not-italic ml-1">kg</span>
+                      </h4>
+                      <p className="text-[10px] font-mono text-neon-green uppercase tracking-widest font-bold">Squat Capacity</p>
+                  </div>
               )}
-            </section>
-
-            <section className="grid md:grid-cols-3 gap-8">
-              <div className="md:col-span-2 p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800">
-                <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                  <span className="w-1 h-4 bg-neon-blue rounded-sm"></span>
-                  Active Objectives
-                </h3>
-                <div className="space-y-1">
-                  {dynamicGoals.map(goal => (
-                    <GoalProgress key={goal.id} goal={goal} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {squatGoal && (
-                    <div className="flex-1 p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-                       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                       <div className="absolute -top-10 -right-10 w-32 h-32 bg-neon-green/10 rounded-full blur-3xl group-hover:bg-neon-green/20 transition-all"></div>
-                       
-                       <h4 className="text-4xl font-black text-white mb-2 italic">
-                           {squatGoal.currentStatus.replace('kg', '')}
-                           <span className="text-lg font-normal text-zinc-500">kg</span>
-                       </h4>
-                       <p className="text-xs font-mono text-neon-green uppercase tracking-widest">Est. Squat RM</p>
-                    </div>
-                )}
-                {toeflGoal && (
-                    <div className="flex-1 p-6 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-                       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                       <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-neon-blue/10 rounded-full blur-3xl group-hover:bg-neon-blue/20 transition-all"></div>
-
-                       <h4 className="text-4xl font-black text-white mb-2">
-                           {toeflGoal.currentStatus.replace('pts', '')}
-                           <span className="text-lg font-normal text-zinc-500">+</span>
-                       </h4>
-                       <p className="text-xs font-mono text-neon-blue uppercase tracking-widest">Est. Score</p>
-                    </div>
-                )}
-              </div>
-            </section>
+              {toeflGoal && (
+                  <div className="flex-1 p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-center items-center text-center relative overflow-hidden group hover:border-neon-blue/50 transition-colors">
+                      <h4 className="text-5xl font-black text-white mb-1 tracking-tighter">
+                          {toeflGoal.currentStatus.replace('pts', '')}
+                          <span className="text-lg font-normal text-zinc-600 ml-1">+</span>
+                      </h4>
+                      <p className="text-[10px] font-mono text-neon-blue uppercase tracking-widest font-bold">TOEFL Score</p>
+                  </div>
+              )}
+            </div>
           </div>
-        )}
+        </section>
 
-        {/* TAB 2: YEARLY ROADMAP */}
-        {activeTab === 'roadmap' && (
-          <div className="animate-in slide-in-from-bottom-2 duration-300">
-            <YearlyRoadmap />
+        {/* SECTION 4: SQUAT PATH (INTEGRATED) */}
+        <section className="animate-in slide-in-from-bottom-4 duration-500 delay-300">
+           <div className="flex items-center gap-2 mb-6 px-2">
+            <TrendingUp size={16} className="text-zinc-500" />
+            <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Strength Analytics</h2>
           </div>
-        )}
+          <SquatPath />
+        </section>
 
-        {/* TAB 3: SQUAT PATH (V5) */}
-        {activeTab === 'squat' && (
-          <div className="animate-in slide-in-from-bottom-2 duration-300">
-            <SquatPath />
+        {/* SECTION 5: ROADMAP (INTEGRATED) */}
+        <section className="animate-in slide-in-from-bottom-4 duration-500 delay-400">
+           <div className="flex items-center gap-2 mb-6 px-2">
+            <Map size={16} className="text-zinc-500" />
+            <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Strategic Roadmap</h2>
           </div>
-        )}
+          <YearlyRoadmap />
+        </section>
 
       </main>
 
@@ -316,6 +335,8 @@ function App() {
         currentDate={currentDate} 
         onDateChange={setCurrentDate}
         onReset={() => setCurrentDate(PROJECT_START)}
+        isSimMode={isSimMode}
+        onToggleSimMode={toggleSimMode}
       />
 
       {modalState.isOpen && (

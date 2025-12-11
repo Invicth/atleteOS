@@ -14,134 +14,171 @@ export const calculateRunningWOD = (date: Date, type: 'INTERVALS' | 'LONG_RUN'):
   const weekNum = getWeeksPassed(date);
   const isDeload = isDeloadWeek(weekNum);
 
-  // --- COACH'S ADJUSTMENT: REALITY CHECK ---
-  // User struggles at 10k @ 6:00/km.
-  // Goal: 21k @ 5:00/km.
-  // Strategy: 
-  // Phase 1 (Weeks 0-8): Structural Integrity. Pace target: 5:40-6:00 (Tempo). Long runs: Slow (6:45+).
-  // Phase 2 (Weeks 9-16): Lactate Threshold. Pace target: 5:15-5:30. Long runs: Moderate.
-  // Phase 3 (Weeks 17+): Race Specificity. Pace target: 4:55-5:05.
-
-  // --- TUESDAY: QUALITY WORK ---
+  // --- TUESDAY: QUALITY WORK (INTERVALS) ---
   if (type === 'INTERVALS') {
     const warmupTime = 10;
     const cooldownTime = 10;
 
-    // PHASE 1: AEROBIC POWER (Building the engine without burning it)
+    // PHASE 1: SPEED ENDURANCE (Short Intervals)
+    // Adjustment V6.2: User can hold 4:40/km but decays after 1km.
+    // Strategy: Use 3 min intervals (approx 600m-650m) to leverage speed w/o hitting the wall.
     if (weekNum < 8) {
-      // Workout: Long Intervals at "Comfortably Hard" pace (not sprint)
-      // Goal: Get comfortable running slightly faster than 6:00 without dying.
-      const reps = isDeload ? 3 : 4 + Math.floor(weekNum / 2); // 4, 4, 5, 5...
-      const intervalTime = 4; // 4 mins running
-      const restTime = 2; // 2 mins walking/jogging
+      const reps = isDeload ? 4 : 5 + Math.floor(weekNum / 2); // 5, 5, 6, 6...
+      const runTime = 3; // minutes (Reduced from 4 to prevent decay)
+      const restTime = 2; // minutes
       
-      const mainSetTime = reps * (intervalTime + restTime);
+      const mainSetTime = reps * (runTime + restTime);
       const totalDuration = warmupTime + mainSetTime + cooldownTime;
       
-      // Target pace is slower than before to match reality
-      const targetPace = "5:40 - 5:50/km"; 
+      // Target Pace: 4:45 - 4:55/km (Sub-max of 4:40 capacity)
+      const targetPaceMin = 4.83; 
+      const estDistancePerRep = (runTime / targetPaceMin) * 1000; // ~620m
+      const roundedDist = Math.round(estDistancePerRep / 10) * 10; 
 
       return {
-        title: isDeload ? 'Run: Recovery Jog' : `Run: Aerobic Intervals W${weekNum + 1}`,
-        methodology: 'Aerobic Power',
-        focusMetric: isDeload ? 'Form Focus' : `Pace: ${targetPace}`,
+        title: isDeload ? 'Run: Recovery Jog' : `Run: Speed Endurance W${weekNum + 1}`,
+        methodology: 'V02 Max (Short Reps)',
+        focusMetric: isDeload ? 'Form Focus' : `Pace: 4:45 - 4:55/km`,
         duration: `${totalDuration} min`,
-        details: [`Total: ${totalDuration} min`, 'Intensity: 7/10 RPE', 'Build confidence at speed'],
+        details: [
+            `Warmup: ${warmupTime} min`, 
+            `Main: ${reps} x 3 min (Fast)`, 
+            `Rest: 2 min (Walk)`,
+            `Cooldown: ${cooldownTime} min`
+        ],
         extendedContent: [
-          { header: "Warmup", items: [`${warmupTime} min Very Easy`, "Leg Swings & Drills"] },
-          { header: "Main Set", items: isDeload 
-              ? [`30 min Continuous Easy Run (Zone 2)`, "Focus on cadence (170+ spm)"] 
-              : [`${reps} x 4 min @ ${targetPace}`, `2 min Recovery Jog between reps`, "Don't sprint. Stay controlled."] 
-          },
-          { header: "Cooldown", items: [`${cooldownTime} min Walk`] }
+          { header: "Warmup", items: [`${warmupTime} min Trote progresivo`, "Movilidad dinámica obligatoria"] },
+          { header: "The Workout (Speed Preservation)", items: [
+              `Realizar ${reps} repeticiones de 3 minutos.`,
+              `RITMO: 4:45 - 4:55/km. (Cerca de tu límite de 4:40, pero controlado).`,
+              `DISTANCIA ESTIMADA: ~${roundedDist} metros por serie.`,
+              `RECUPERAR: ${restTime} min caminando. Deja que baje el pulso.`,
+              "Nota: Cortamos a los 3 min para evitar que tu técnica decaiga."
+          ] },
+          { header: "Cooldown", items: [`${cooldownTime} min Caminata`] },
+          { 
+              header: "⌚ Clock Setup (Garmin/Apple)", 
+              items: [
+                  "Mode: Intervals (Time)",
+                  `Work: 3:00`,
+                  `Rest: 2:00`,
+                  `Repeat: ${reps} times`
+              ]
+          }
         ]
       };
     } 
-    // PHASE 2: THRESHOLD (Getting used to discomfort)
+    // PHASE 2: LACTATE THRESHOLD (Tempo)
+    // Bridge the gap. Use 5:20-5:30/km to build stamina.
     else if (weekNum < 16) {
-      // Workout: Tempo Runs (Sustained effort)
-      const tempoDuration = isDeload ? 15 : 20 + (weekNum - 8) * 2; // 20, 22, 24... up to 30-35 mins
+      const tempoDuration = isDeload ? 15 : 20 + (weekNum - 8) * 3; // 20, 23, 26... up to 40 min
       const totalDuration = warmupTime + tempoDuration + cooldownTime;
-      const targetPace = "5:15 - 5:25/km";
+      const targetPace = "5:20 - 5:30/km"; // "Comfortably Hard"
+      
+      const paceDecimal = 5.41; 
+      const estTotalDist = (tempoDuration / paceDecimal).toFixed(1); 
 
       return {
-        title: isDeload ? 'Run: Deload' : `Run: Tempo Run W${weekNum + 1}`,
-        methodology: 'Lactate Threshold',
-        focusMetric: `Sustain: ${targetPace}`,
+        title: isDeload ? 'Run: Deload' : `Run: Threshold Tempo W${weekNum + 1}`,
+        methodology: 'Lactate Clearance',
+        focusMetric: `Hold: ${targetPace}`,
         duration: `${totalDuration} min`,
-        details: [`Continuous Effort`, 'Hard but sustainable'],
+        details: [`Sustain ${tempoDuration} min`, `Approx: ${estTotalDist} km`, 'No stopping'],
         extendedContent: [
-           { header: "Warmup", items: [`${warmupTime} min Progressive`, "2 x 20s Strides"] },
-           { header: "Main Set", items: [`${tempoDuration} min Continuous Run`, `Target Pace: ${targetPace}`, "Mental Focus: Don't quit when it burns."] },
-           { header: "Cooldown", items: [`${cooldownTime} min easy`] }
+           { header: "Warmup", items: [`${warmupTime} min`, "3 x 20s Sprints progresivos"] },
+           { header: "Main Set (Threshold)", items: [
+               `${tempoDuration} minutos a ritmo sostenido.`, 
+               `RITMO: ${targetPace}.`, 
+               "Sensación: 'Podría hablar con frases cortas, pero prefiero no hacerlo'.",
+               "Este es el entreno que te dará la resistencia que te falta."
+           ] },
+           { header: "Cooldown", items: [`${cooldownTime} min suave`] },
+           { 
+              header: "⌚ Clock Setup", 
+              items: [
+                  "Mode: Run",
+                  "Lap button after warmup",
+                  `Monitor Avg Pace`
+              ]
+          }
         ]
       };
     }
-    // PHASE 3: RACE SPECIFICITY (The Goal Pace)
+    // PHASE 3: RACE SPECIFICITY (1km Repeats)
+    // Target: 5:00/km. DO NOT go faster even if you can.
     else {
-      // Workout: 1km Repeats at Goal Pace (Yasso 800s style but 1k)
-      const reps = isDeload ? 3 : 5 + Math.floor((weekNum - 16) / 2); // 5, 5, 6, 6... max 8
-      const cappedReps = Math.min(8, reps);
-      
-      const mainSetTime = cappedReps * 7; // ~5 min run + 2 min rest
+      const reps = isDeload ? 3 : 5 + Math.floor((weekNum - 16) / 2);
+      const cappedReps = Math.min(8, reps); // Max 8x1000
+      const mainSetTime = cappedReps * 7; 
       const totalDuration = warmupTime + mainSetTime + cooldownTime;
-      const targetPace = "4:55 - 5:05/km";
+      const targetPace = "5:00 - 5:10/km"; // Goal Race Pace
 
       return {
-        title: isDeload ? 'Run: Tapering Speed' : 'Run: Race Pace Intervals',
+        title: isDeload ? 'Run: Tapering' : 'Run: Goal Pace Intervals',
         methodology: 'Race Specificity',
-        focusMetric: `Goal Pace: ${targetPace}`,
+        focusMetric: `Strict: ${targetPace}`,
         duration: `${totalDuration} min`,
-        details: [`${cappedReps} x 1km Repeats`, 'Simulating Race Day'],
+        details: [`${cappedReps} x 1000m`, 'Rest: 90s', 'Lock in Goal Pace'],
         extendedContent: [
-           { header: "Warmup", items: [`${warmupTime} min Easy`, "4 x Strides (Race pace)"] },
-           { header: "The Exam", items: [`${cappedReps} x 1000m Intervals`, `MUST HIT: ${targetPace}`, "Rest: 2 min standing/walking"] },
-           { header: "Cooldown", items: [`${cooldownTime} min easy`] }
+           { header: "Warmup", items: [`${warmupTime} min Easy`, "4 x Strides"] },
+           { header: "The Exam (1K Reps)", items: [
+               `${cappedReps} series de 1000 metros.`,
+               `RITMO: ${targetPace}. NO vayas a 4:40.`,
+               "Objetivo: Enseñar al cuerpo la eficiencia a ritmo de carrera.",
+               "Descanso: 90 segundos (bajamos el descanso respecto a Fase 1)."
+           ] },
+           { header: "Cooldown", items: [`${cooldownTime} min easy`] },
+           { 
+              header: "⌚ Clock Setup", 
+              items: [
+                  "Mode: Intervals (Distance)",
+                  `Work: 1.00 km`,
+                  `Rest: 1:30 min`,
+                  `Repeat: ${cappedReps} times`
+              ]
+          }
         ]
       };
     }
   }
 
-  // --- SATURDAY: LONG RUN (Regression to Progression) ---
+  // --- SATURDAY: LONG RUN (Distance Based) ---
   if (type === 'LONG_RUN') {
-    // Coach Logic: If 10k @ 6:00 was hard, we start lower to build confidence.
-    // Start at 7km. Add 1km every 2 weeks or so.
-    
-    let baseDistance = 7;
-    let distance = baseDistance + (weekNum * 0.6); // Slower progression curve
-    
-    // Cap at 19km (No need to run 21k in training for a first half if struggling)
-    if (distance > 19) distance = 19; 
-    
-    if (isDeload) {
-        distance = distance * 0.7; // Significant drop to recover legs
-    }
-
-    // Tapering for June (Weeks 24-26)
-    if (weekNum >= 24) {
-        distance = distance * 0.5; // Sharp taper
-    }
+    let baseDistance = 8; // Start slightly higher since intensity is low
+    let distance = baseDistance + (weekNum * 0.8);
+    if (distance > 20) distance = 20; 
+    if (isDeload) distance = distance * 0.7;
+    // Tapering last 2 weeks
+    if (weekNum >= 24) distance = 10 + (26 - weekNum); // Drops 12, 11...
 
     const roundedDist = Math.round(distance * 10) / 10;
-    
-    // Estimate Duration based on "Easy" pace.
-    // Current Easy Pace for user is likely 6:45 - 7:00/km if 6:00 was hard.
-    const estPace = 7.0; // minutes per km
+    const estPace = 7.0; // 7:00/km (Easy)
     const estDuration = Math.round(roundedDist * estPace);
 
     return {
-      title: isDeload ? 'Run: Deload Long Run' : 'Run: Time on Feet',
-      methodology: 'Aerobic Base (Zone 2)',
+      title: isDeload ? 'Run: Deload Long Run' : 'Run: Aerobic Base',
+      methodology: 'Zone 2 (Endurance)',
       focusMetric: `${roundedDist} KM`,
       duration: `~${estDuration} min`,
-      details: [`Distance: ${roundedDist} km`, 'Pace: IGNORE SPEED.', isDeload ? 'Active Recovery' : 'Just finish it.'],
+      details: [`Total: ${roundedDist} km`, 'Pace: 6:45 - 7:15/km', 'Focus: Volume'],
       extendedContent: [
           { header: "Strategy", items: [
-              `Objetivo: Completar ${roundedDist} km.`, 
-              "RITMO: Muy suave (6:45 - 7:00/km).", 
-              "Si te falta el aire, CAMINA. No es vergüenza, es estrategia."
+              `OBJETIVO: Completar ${roundedDist} km sin caminar.`, 
+              "RITMO: Lento (6:45 - 7:15/km).", 
+              "Si te sientes bien, NO aceleres. Guarda esa energía para el Martes."
           ]},
-          { header: "Checklist", items: ["Zapatillas cómodas", "Podcast largo", "Hidratación obligatoria"] }
+          { header: "Nutrition", items: [
+              "Hidratación cada 20 min.",
+              "Si pasas de 12km, prueba llevar un gel."
+          ] },
+          { 
+              header: "⌚ Clock Setup", 
+              items: [
+                  "Mode: Run",
+                  "Alert: Distance 1km",
+                  "Screen: Total Time / Total Dist"
+              ]
+          }
       ]
     };
   }

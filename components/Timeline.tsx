@@ -2,6 +2,7 @@ import React from 'react';
 import { PHASES } from '../constants';
 import { Phase } from '../types';
 import { CheckCircle2, Circle, Lock } from 'lucide-react';
+import { toLocalISOString } from '../services/dateService'; // V6.3 Import
 
 interface TimelineProps {
   currentPhase: Phase | null;
@@ -9,7 +10,8 @@ interface TimelineProps {
 }
 
 export const Timeline: React.FC<TimelineProps> = ({ currentPhase, currentDate }) => {
-  const currentDateStr = currentDate.toISOString().split('T')[0];
+  // Fix: Use local date string comparison
+  const currentDateStr = toLocalISOString(currentDate);
 
   return (
     <div className="w-full overflow-x-auto pb-4">
